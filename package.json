@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "version": "0.0.1",
+  "keywords": [
+    "node",
+    "koa2",
+    "webpack",
+    "swagger",
+    "babel",
+    "cil",
+    "es6"
+  ],
+  "description": "A build system and frameworks for Node like Next.js",
+  "author": "Yohann",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "dependencies": {}
+}

@@ -1,0 +1,10 @@
+{
+  "presets" : ["bus-core-sql/babel"],
+  "env": {
+    "production": {
+      "plugins": [
+        ["transform-remove-console", { "exclude": [ "error", "warn", "info"] }]
+      ]
+    }
+  }
+}
