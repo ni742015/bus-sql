@@ -26,7 +26,7 @@ export default ({
 		@tag
 		@responses(examples.role)
 		static async create(ctx) {
-			const {body} = ctx.request.body
+			const {body} = ctx.request
 			const auths = await authModel.findAll({where: {id: {[Op.in]: body.auths}}})
 			const role = await roleModel.create(body)
 			await role.setAuths(auths)
