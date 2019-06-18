@@ -1,11 +1,11 @@
 import bus from '../index.js'
-import auth from '../utils/auth'
 
 export default ({
 	examples,
 	models,
 	tag,
 	Sequelize,
+	auth,
 	decorator: {
 		request,
 		summary,
@@ -87,16 +87,20 @@ export default ({
 		@body(userExample)
 		@responses(userExample)
 		static async register(ctx) {
-			return userModel
-				.create(ctx.request.body) // just for demo, never save user.password without encrypt
-				.then(user => (ctx.body = user))
-				.catch(err => {
-					throw new ApiError(null, 500, err.message)
-				})
+			const {
+				request: { body }
+			} = ctx
+
+			const roles = await roleModel.findAll({where: {id: {[Op.in]: body.roles}}})
+			const user = await userModel.create(body)
+			await user.setRoles(roles)
+
+			ctx.body = user
 		}
 
 		@request('PUT', '/user/{id}')
 		@summary('修改')
+		@middlewares([auth(['admin'])])
 		@tag
 		@path({
 			id: {

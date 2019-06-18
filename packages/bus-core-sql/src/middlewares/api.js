@@ -53,11 +53,17 @@ module.exports = async function(ctx, next) {
 			await next()
 
 			if(ctx.url.indexOf(`/${apiPrefix}`) === 0 && ctx.url.indexOf(`/${apiPrefix}/swagger`) < 0) {
-				if (ctx.body) {
-					ctx.body = (beforeApiResolve && await beforeApiResolve(ctx)) || {
-						success: true,
-						data: ctx.body
-					}
+				let body = {
+					success: true,
+					data: ctx.body
+				}
+
+				if(beforeApiResolve) {
+					body = await beforeApiResolve(ctx)
+				}
+
+				if (body) {
+					ctx.body = body
 				}
 			}
 		}
