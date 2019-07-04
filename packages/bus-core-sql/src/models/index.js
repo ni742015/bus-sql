@@ -1,4 +1,4 @@
-// const helpers = require('./helpers')
+const helpers = require('./helpers')
 
 class Models {
 	constructor(props = {}) {
@@ -25,6 +25,10 @@ class Models {
 					timestamps: true,
 				}, extend))
 
+				Object.assign(
+					Schema,
+					helpers(Schema)
+				)
 				// hook
 				if(hooks.onInitModels) {
 					let formatedSchema = await hooks.onInitModels(name, Schema)
