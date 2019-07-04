@@ -19,6 +19,7 @@ class Api {
 	init = async ({ models, examples, hooks, config, sequelize }) => {
 		try {
 			// console.log('config.apiPrefix', config.apiPrefix)
+			const apiPrefix = config.apiPrefix ? `/${config.apiPrefix}` : ''
 
 			decorator.wrapper(router)
 			// swagger docs avaliable at http://localhost:3001/api/swagger-html
@@ -27,11 +28,11 @@ class Api {
 				description: 'API 文档',
 				version: '1.0.0',
 				// [optional] default is root path.
-				prefix: '/' + (config.apiPrefix === undefined ? config.apiPrefix : 'api'),
+				prefix: `${apiPrefix}`,
 				// [optional] default is /swagger-html
-				swaggerHtmlEndpoint: '/swagger-html',
+				swaggerHtmlEndpoint: `/swagger-html`,
 				// [optional] default is /swagger-json
-				swaggerJsonEndpoint: '/swagger-json',
+				swaggerJsonEndpoint: `/swagger-json`,
 				// [optional] additional options for building swagger doc
 				// eg. add api_key as shown below
 				swaggerOptions: {
@@ -44,6 +45,7 @@ class Api {
 					},
 				}
 			}, config.swaggerConfig || {}))
+
 
 			// 过滤不用的参数
 			const decoratorBody = decorator.body

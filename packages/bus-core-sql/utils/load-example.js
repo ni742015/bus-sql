@@ -17,7 +17,7 @@ const fetchAndExtract = ({ projectName, example }) =>
 					},
 					[
 						// We only care about this dir
-						`bus-master/examples/${example}`
+						`bus-sql-master/examples/${example}`
 					]
 				)
 			)

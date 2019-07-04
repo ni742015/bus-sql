@@ -4,7 +4,7 @@
 const http = require('http')
 
 module.exports = function (app) {
-	let {port, apiPrefix} = this.config
+	let {port, apiPrefix, swaggerConfig = {}} = this.config
 
 	// 将端口号设置为配置文件的端口号，默认值为3000
 	port = normalizePort(port || '3000')
@@ -70,7 +70,7 @@ module.exports = function (app) {
 			? 'pipe ' + addr
 			: 'port ' + addr.port
 		console.info('Listening on ' + bind)
-		console.info(`Open http://localhost:${port}/${apiPrefix}/swagger-html to get swagger html`)
+		console.info(`Open http://localhost:${port}${swaggerConfig.prefix || `/${apiPrefix}`}/swagger-html to get swagger html`)
 	}
 
 	/**

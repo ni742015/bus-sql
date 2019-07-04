@@ -6,12 +6,15 @@ function formatExample(data) {
 	for (const key in data) {
 		if (data.hasOwnProperty(key)) {
 			const item = Object.assign({}, data[key])
-			// console.log('data instanceof Sequelize.type', data[key].key)
-			if(item.key) {
-				item.type = item.name || item.key
+			// console.log('data instanceof Sequelize.type', item.key, item)
+			if (item.type) {
+				item.type = (
+					item.typeSwagger ||
+					item.type.name ||
+					item.type.key
+				).toLowerCase()
 			} else {
-				// typeSwagger
-				item.type = (item.typeSwagger || item.type.name || item.type.key).toLowerCase()
+				item.type = item.name || item.key
 			}
 
 			newData[key] = item
@@ -27,18 +30,19 @@ class Schema {
 	}
 
 	// data {name: '', schema: {}}
-	add = (data) => {
+	add = data => {
 		this.datas.push(data)
 	}
 
-	init = async ({hooks}) => {
-		try {
-			let schemas = {}, examples = {}
+	init = async ({ hooks }) => {
+		let schemas = {},
+			examples = {}
 
-			for (const {name, schema} of this.datas) {
+		for (const { name, schema } of this.datas) {
+			try {
 				let schemaObj = schema(Sequelize)
 				// hook
-				if(hooks.onInitSchema) {
+				if (hooks.onInitSchema) {
 					let formatedData = await hooks.onInitSchema(name, schemaObj)
 					schemaObj = formatedData ? formatedData : schemaObj
 				}
@@ -51,15 +55,15 @@ class Schema {
 				// 		return this.getDataValue(key)===1? true:false
 				// 	}
 				// }
+			} catch (error) {
+				console.warn(`Init Schemas Error: ${name}`, error)
+				throw error
 			}
+		}
 
-			return {
-				schemas,
-				examples
-			}
-		} catch (error) {
-			console.warn('Init Schemas Error', error)
-			throw error
+		return {
+			schemas,
+			examples
 		}
 	}
 }

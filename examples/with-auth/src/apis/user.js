@@ -48,18 +48,24 @@ export default ({
 					include: [{
 						model: models.role,
 						as: 'roles',
+						attributes: ['id', 'name', 'landingRoute'],
 						include: [{
 							model: models.auth,
 							as: 'auths',
+							attributes: ['id', 'code', 'name']
 						}]
 					}]
 				})
 				.then(res => {
 					if (res && res.roles) {
 						res.roles.map(item => {
-							item.auths && item.auths.map(auth => {
-								auths.push(auth.code)
-							})
+							// const {auths} = item
+							if(item) {
+								item.auths && item.auths.map(auth => {
+									auths.push(auth.code)
+								})
+							}
+
 						})
 						//数组去重
 						auths = Array.from(new Set(auths))
@@ -72,7 +78,10 @@ export default ({
 				let token = bus.Token.create(data, '30d')
 
 				ctx.body = {
-					user: data,
+					user: {
+						...data,
+						roles: user.roles
+					},
 					token
 				}
 			} else {
