@@ -1,7 +1,6 @@
 const { prompt } = require('inquirer')
 const loadExample = require('../utils/load-example')
 const chalk = require('chalk')
-const download = require('download-git-repo')
 const ora = require('ora')
 
 let tplList = require(`${__dirname}/tpl.json`)

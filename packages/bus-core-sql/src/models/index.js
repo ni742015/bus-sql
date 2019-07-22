@@ -21,9 +21,8 @@ class Models {
 				let {associate} = extend
 				associate && (associateObj[name] = associate)
 
-				let Schema = sequelize.define(name.replace(name[0], name[0].toUpperCase()), schema, Object.assign({
-					timestamps: true,
-				}, extend))
+				// let Schema = sequelize.define(name.replace(name[0], name[0].toUpperCase()), schema, extend)
+				let Schema = sequelize.define(name[0], schema, extend)
 
 				Object.assign(
 					Schema,
