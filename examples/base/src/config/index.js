@@ -4,7 +4,7 @@ const base = {
 	db: {
 		'database': 'test',
 		'username': 'root',
-		'password': 'root',
+		'password': '123123',
 		'config': {
 			'host': 'localhost',
 			'port': '3306',

@@ -8,14 +8,25 @@ const bus = new Bus({
 	config,
 	Api,
 	Model,
-	Schema
+	Schema,
+	hooks: {
+		onInitMiddlewares: async function(middlewares, app) {
+			middlewares.before('_timer', {
+				name: 'youzan',
+				middleware: () => (ctx, next) => {
+					console.log(1111)
+					next()
+				}
+			})
+		}
+	}
 })
 
 /* eslint-disable no-unused-vars */
 bus.start().then(app => {
 	/* eslint-disable no-console */
 	console.info('app start success')
-	return bus.sequelize.sync({ alter: true })
+	// return bus.sequelize.sync({ alter: true })
 })
 
 export default bus

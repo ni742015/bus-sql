@@ -11,6 +11,9 @@ const options = {
 	publish_env: process.env.PUBLISH_ENV || 'production',
 }
 
+process.env.NODE_ENV = options.env
+process.env.PUBLISH_ENV = options.publish_env
+
 const configPath = path.resolve('bus.config.js')
 let userConfig = {}
 

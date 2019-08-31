@@ -6,50 +6,47 @@ const MwChain = require('./utils/mwChain')
 const errorHandel = require('./utils/errorHandel')
 const api_middleware = require('./middlewares/api')
 
-module.exports = function (router) {
-	let {onInitMiddlewares, onError} = this.hooks
-	let {config} = this
+module.exports = async function(router) {
+	let { onInitMiddlewares, onError } = this.hooks
+	let { config } = this
 	let middlewares = []
 	let mwChain = new MwChain([
-		{name:'_cors', opt: config.cors || {}, middleware: cors},
-		{name:'_bodyparser', opt: {enableTypes:['json', 'form']}, middleware: bodyparser},
-		{name:'_timer', opt: {}, middleware: () => async (ctx, next) => {
-			const start = new Date()
-			await next()
-			const ms = new Date() - start
-			console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-		}},
-		{name:'_auth', opt: {}, middleware: () => api_middleware.bind(this)},
-		{name:'_api', opt: {}, middleware: () => [router.routes(), router.allowedMethods()]},
+		{ name: '_cors', opt: config.cors || {}, middleware: cors },
+		{
+			name: '_bodyparser',
+			opt: { enableTypes: ['json', 'form'] },
+			middleware: bodyparser
+		},
+		{
+			name: '_timer',
+			opt: {},
+			middleware: () => async (ctx, next) => {
+				const start = new Date()
+				await next()
+				const ms = new Date() - start
+				console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
+			}
+		},
+		{ name: '_auth', opt: {}, middleware: () => api_middleware.bind(this) },
+		{
+			name: '_api',
+			opt: {},
+			middleware: () => [router.routes(), router.allowedMethods()]
+		}
 	])
 
-	if(config.middlewares) {
+	if (config.middlewares) {
 		config.middlewares(mwChain)
 	}
 
-	middlewares = mwChain.getMiddlewares()
-	// let middlewares = [
-	// 	cors(),
-	// 	bodyparser({
-	// 		enableTypes:['json', 'form']
-	// 	}),
-	// 	json(),
-	// 	async (ctx, next) => {
-	// 		const start = new Date()
-	// 		await next()
-	// 		const ms = new Date() - start
-	// 		console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-	// 	},
-	// 	api_middleware.bind(this),
-	// 	[router.routes(), router.allowedMethods()]
-	// ]
-
 	if (onInitMiddlewares) {
-		middlewares = onInitMiddlewares(middlewares, app) || middlewares
+		mwChain = await onInitMiddlewares.call(this, mwChain, app) || mwChain
 	}
+	middlewares = mwChain.getMiddlewares()
+
 
 	for (const md of middlewares) {
-		if(Object.prototype.toString.call(md) === '[object Array]') {
+		if (Object.prototype.toString.call(md) === '[object Array]') {
 			app.use.apply(app, md)
 		} else {
 			app.use(md)
