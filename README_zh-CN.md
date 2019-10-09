@@ -6,7 +6,7 @@ Bus
 
 > 一个针对Node.js的脚手架构建工具，帮助快速搭建后端开发项目
 
-Bus是针对Node.js的一站式解决方案. 受到Vue-cil, Next.js, 和[Backpack](https://github.com/jaredpalmer/backpack)的启发. Bus 让你可以通过一行命令快速启动一个基于koa的后端项目. 你可以在你的项目中使用Babel, Webpack, Swagger, Mongoose通过很少的一些配置.
+Bus是针对Node.js的一站式解决方案（Bus-sql是bus的sql版本）. 受到Vue-cil, Next.js, 和[Backpack](https://github.com/jaredpalmer/backpack)的启发. Bus 让你可以通过一行命令快速启动一个基于koa的后端项目. 你可以在你的项目中使用Babel, Webpack, Swagger, Sequelize通过很少的一些配置.
 
 ---
 - [How to use](#how-to-use)
@@ -34,10 +34,10 @@ Bus是针对Node.js的一站式解决方案. 受到Vue-cil, Next.js, 和[Backpac
 安装方式:
 
 ```bash
-npm install -g bus-core
+npm install -g bus-core-sql
 bus init
 // or
-npx bus-core init
+npx bus-core-sql init
 
 ```
 
@@ -51,9 +51,15 @@ npm install
 ```
 {
     port: 3000,
-    mongodb: {
-        url: 'mongodb://test:test@mongoBaseUrl/test'
-    }
+    db: {
+		database: 'test',
+		username: 'root',
+		password: '123123',
+		config: {
+			host: 'localhost',
+			port: '3306'
+		}
+	}
 }
 ```
 运行 npm run dev 成功后打开 http://localhost:3000/api/swagger-html
@@ -84,12 +90,14 @@ const bus = new Bus({
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [mongodb] | <code>Object</code> | mongodb设置项 |
-| [mongodb.url] | <code>String</code> | mongodb url |
-| [mongodb.options] | <code>Object</code> | [mongoose链接设置](https://mongoosejs.com/docs/connections.html#options) |
+| [db] | <code>Object</code> | db设置项 |
+| [db.database] | <code>String</code> | database |
+| [db.username] | <code>String</code> | username |
+| [db.password] | <code>String</code> | password |
+| [db.config] | <code>Object</code> | [sequelize的链接设置](https://sequelize.org/master/manual/getting-started.html#setting-up-a-connection) |
 | [logsPath] | <code>String</code> | logs输出地址(default: ./logs) |
 | [apiPrefix] | <code>String</code> | 每个路由的前缀 |
-| [swaggerConfig] | <code>Object</code> | [swagger设置](https://github.com/ni742015/bus/blob/master/packages/bus-core/src/apis/index.js) |
+| [swaggerConfig] | <code>Object</code> | [swagger设置](https://github.com/ni742015/bus/blob/master/packages/bus-core-sql/src/apis/index.js) |
 | [port] | <code>String</code> | 程序端口 |
 | [jwt] | <code>Object</code> | jwt 设置 |
 | [jwt.secret] | <code>String</code> | jwt 秘钥(用于加密生成一个token) |
@@ -101,11 +109,13 @@ new Bus({
     config: {
         port: 3000,
         apiPrefix: 'api',
-        mongodb: {
-            url: 'mongodb://test:test@localhost:27017/test',
-            options: {
-                useNewUrlParser: true,
-                poolSize: 10
+        db: {
+            database: 'test',
+            username: 'root',
+            password: '123123',
+            config: {
+                host: 'localhost',
+                port: '3306'
             }
         },
         swaggerConfig: {
@@ -169,39 +179,57 @@ schema 同时用于生成mongoose的映射model和swagger中的返回示例对�
 定义一个schmea
 ```
 // user.js
-const mongoose = require('mongoose')
+export default function (Sequelize) {
+	return {
+		schema: {
+			username: {
+				type: Sequelize.STRING(100),
+				unique: true
+			},
+			password: Sequelize.STRING,
+			status: Sequelize.INTEGER
+		},
+		extend: {
+			associate(models, curModel) {
+				let {userDetail} = models
+				curModel.hasMany(userDetail)
+			}
+		}
 
-module.exports = {
-	username: {
-		type: String,
-		example: 'admin', // use for swagger
-		unique: true,
-		required: true
-	},
-	role_id: {
-		type: mongoose.Types.ObjectId,
-		typeSwagger: String, // use for swagger
-		example: 'role',
-        ref: 'Role'
-	},
+	}
 }
 ```
 
 #### Model
 
-mongoose的model([详情](https://mongoosejs.com/docs/guide.html#models))
-
-> 提示: 每个model都会有3个默认方法([详情](https://github.com/ni742015/bus/blob/master/packages/bus-core/src/models/helpers.js))
+拓展一些通用的方法
 
 ```
 // user.js
-module.exports = (schema, models) => {
-	schema
-		.virtual('fullName').get(function () {
-			return this.name.first + ' ' + this.name.last;
-		});
+const Sequelize = require('sequelize')
+const Op = Sequelize.Op
 
+export default (schema, models) => {
+	const User = models.user
+	const utils = {
+		list(filter = '') {
+			return User.findAndCount({
+				where: {
+					[Op.or]: [
+						{'username': { [Op.like]: `%${filter}%` }},
+						{'$UserDetails.name$': { [Op.like]: `%${filter}%` }},
+					]
+				},
+				include: [{
+					model: models.userDetail
+				}]
+			})
+		}
+	}
+
+	Object.assign(User, utils)
 }
+
 
 ```
 
@@ -247,7 +275,7 @@ module.exports = ({
 	const userExample = examples.user
 
 	class User {
-		@request('GET', '/users')
+			@request('GET', '/user')
 		@summary('获取用户信息')
 		@tag
 		@query({
@@ -256,16 +284,21 @@ module.exports = ({
 				description: 'username filter'
 			},
 		})
-		@responses(userExample)
-		// cover common api 
+		@responses({
+			rows: 'object',
+			total: 'number'
+		})
+		// cover common api
 		static async query(ctx) {
-			const {filter} = ctx.query
-			return userModel.like(filter, 'username') // this function is inherit from bus helper
-				.then(user => ctx.body = user)
-				.catch(err => {
-					throw new ApiError(null, 400, err.message)
-				})
+			try {
+				const {filter} = ctx.query
+
+				ctx.body = await userModel.list(filter)
+			} catch (error) {
+				throw new ApiError(null, 500, error.message)
+			}
 		}
+
 	}
 
 	return {
