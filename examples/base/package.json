@@ -4,6 +4,7 @@
   "scripts": {
     "start": "node ./build/main.js",
     "dev": "bus-sql dev",
+    "debug": "bus-sql debug",
     "build": "bus-sql build"
   },
   "license": "MIT",

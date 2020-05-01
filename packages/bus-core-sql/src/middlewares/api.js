@@ -9,9 +9,10 @@ const ApiError = require('../utils/error/apiError')
 const logUtil = require('../utils/log')
 
 module.exports = async function(ctx, next) {
+	const start_time = new Date()
 	try {
 		let {config: {jwt, apiPrefix}, hooks: {beforeApiEnter, beforeApiResolve}} = this
-		ctx.start_time = new Date()
+		ctx.start_time = start_time
 		if(jwt) {
 			if(new RegExp(`^/${apiPrefix}`).test(ctx.url)) {
 				let Token = this.Token
@@ -94,8 +95,8 @@ module.exports = async function(ctx, next) {
 			}
 		})
 
-		console.warn(`Error: ${ctx.method} ${ctx.url}\n`, error)
-		logUtil.logError(ctx, error, new Date() - ctx.start_time)
+		console.warn(`${start_time.toLocaleString()} Error: ${ctx.method} ${ctx.url}\n`, error)
+		logUtil.logError( ctx, error, new Date() - start_time)
 		// }
 	}
 
