@@ -14,8 +14,9 @@ class Token {
 	}
 
 	decode = (token, secret = this.secret) => {
+		console.log('secret', secret)
 		if(token) {
-			let data = jwt.decode(token, secret)
+			let data = jwt.verify(token, secret)
 			if (data && data.exp > new Date()/1000) {
 				return data
 			}
