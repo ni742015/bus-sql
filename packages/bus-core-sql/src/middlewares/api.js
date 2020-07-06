@@ -8,6 +8,28 @@ const { filter_request_body } = require('../utils/index.js')
 const ApiError = require('../utils/error/apiError')
 const logUtil = require('../utils/log')
 
+function Auth(authorization, ctx){
+	console.log('authorization',authorization);
+
+	if (authorization) {
+		let token = authorization.indexOf(' ') >= 0 ? authorization.split(' ').pop() : authorization // Bearer xxx
+		// 解码token
+		const decode = this.Token.decode(token)
+		if(!decode) {
+			throw new ApiError(null, 401, 'Auth failed')
+		}
+
+		// ctx.state = undefined
+		// if(this.hooks.onTokenCheck) {
+		// 	ctx.state = await this.hooks.onTokenCheck(decode, ctx)
+		// }
+		// ctx.state = ctx.state || decode || {}
+		ctx.state = decode || {}
+		return decode
+	} else {
+		throw new ApiError(null, 401, 'There is no token')
+	}
+}
 module.exports = async function(ctx, next) {
 	const start_time = new Date()
 	try {
@@ -16,35 +38,18 @@ module.exports = async function(ctx, next) {
 		if(jwt) {
 			if(new RegExp(`^/${apiPrefix}`).test(ctx.url)) {
 				let Token = this.Token
-
 				// 排除一些路径
 				if(Token.checkUrl(ctx)) {
 					let {authorization} = ctx.request.header
-					if (authorization) {
-						let token = authorization.indexOf(' ') >= 0 ? authorization.split(' ').pop() : authorization // Bearer xxx
-
-						// 解码token
-						const decode = Token.decode(token)
-						if(!decode) {
-							throw new ApiError(null, 401, 'Auth failed')
-						}
-
-						ctx.state = undefined
-						if(this.hooks.onTokenCheck) {
-							ctx.state = await this.hooks.onTokenCheck(decode, ctx)
-						}
-
-						ctx.state = ctx.state || decode || {}
-
+					if(this.hooks.onTokenCheck) {
+						await this.hooks.onTokenCheck(ctx, Auth.bind(this))
 					} else {
-						throw new ApiError(null, 401, 'There is no token')
+						Auth.call(this, authorization, ctx)
 					}
 				}
-
 				// 去除不要的参数
 				ctx.request.body = filter_request_body(ctx.request.body)
 				// console.log('ctx.request.body', ctx.request.body);
-
 			}
 		}
 
@@ -52,7 +57,6 @@ module.exports = async function(ctx, next) {
 		if(!beforeApiEnter || await beforeApiEnter(ctx, next) !== false) {
 			//先去执行路由
 			await next()
-
 			if(ctx.url.indexOf(`/${apiPrefix}`) === 0 && ctx.url.indexOf('/swagger') < 0) {
 				let body = {
 					success: true,
