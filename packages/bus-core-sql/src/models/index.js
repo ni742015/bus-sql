@@ -17,12 +17,13 @@ class Models {
 			const models = {}
 			const associateObj = {}
 			for (const name in schemas) {
-				let {schema, extend = {}} = schemas[name]
+				let {schema, extend = {}, schemaName} = schemas[name]
 				let {associate} = extend
 				associate && (associateObj[name] = associate)
-
+				const fName = schemaName||name
+				delete schemas[name].schemaName
 				// let Schema = sequelize.define(name.replace(name[0], name[0].toUpperCase()), schema, extend)
-				let Schema = sequelize.define(name, schema, extend)
+				let Schema = sequelize.define(fName, schema, extend)
 
 				Object.assign(
 					Schema,

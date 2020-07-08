@@ -38,7 +38,7 @@ class Schema {
 		let schemas = {},
 			examples = {}
 
-		for (const { name, schema } of this.datas) {
+		for (const { name, schema, schemaName } of this.datas) {
 			try {
 				let schemaObj = schema(Sequelize)
 				// hook
@@ -46,6 +46,7 @@ class Schema {
 					let formatedData = await hooks.onInitSchema(name, schemaObj)
 					schemaObj = formatedData ? formatedData : schemaObj
 				}
+				schemaObj.schemaName=schemaName
 				// console.log('schema name:', name)
 				examples[name] = formatExample(schemaObj.schema)
 				schemas[name] = schemaObj
