@@ -52,7 +52,7 @@
     "ora": "^3.0.0",
     "sequelize": "^4.43.0",
     "source-map-support": "^0.5.9",
-    "tar": "^4.4.8",
+    "tar": "^4.4.18",
     "webpack": "4.16.1",
     "webpack-cli": "^3.1.2",
     "webpack-node-externals": "^1.7.2"
